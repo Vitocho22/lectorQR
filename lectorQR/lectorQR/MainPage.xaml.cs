@@ -21,15 +21,26 @@ namespace lectorQR
             var scan = new ZXingScannerPage();
             await Navigation.PushModalAsync(scan);
 
-            scan.OnScanResult += (result) =>
+            scan.OnScanResult += async (result) =>
             {
                 Device.BeginInvokeOnMainThread(async () =>
                 {
                     await Navigation.PopModalAsync();
-                    await DisplayAlert("Valor QRCODE", "" + result.Text, "OK");
+
+                    // Verificar si el resultado del escaneo es un enlace web
+                    if (Uri.TryCreate(result.Text, UriKind.Absolute, out Uri uriResult)
+                        && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps))
+                    {
+                        // Abrir el enlace en el navegador del dispositivo
+                        Device.OpenUri(uriResult);
+                    }
+                    else
+                    {
+                        // Mostrar una alerta si el escaneo no es un enlace web
+                        await DisplayAlert("Valor QRCODE", result.Text, "OK");
+                    }
                 });
             };
-
         }
     }
 }
